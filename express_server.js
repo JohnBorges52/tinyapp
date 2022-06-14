@@ -14,13 +14,28 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 
-app.post("/urls/:shortURL", (req, res) => {
+app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL]
-  console.log(shortURL);
-  res.redirect("/urls")
+  res.redirect("/urls" + shortURL)
 
 })
+
+app.post("/urls/:shortURL/edit", (req,res) => {
+  const shortURL = req.params.shortURL;
+  urlDatabase[shortURL] = req.body.longURL
+  console.log(req.body)
+  res.redirect("/urls/");
+
+})
+
+app.get("/urls/:shortURL/edit", (req,res) => {
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  res.render("urls_show", templateVars);
+
+
+})
+
 
 app.get("/", (req, res) => {
   res.send("Hello!");
