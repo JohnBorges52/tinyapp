@@ -11,10 +11,20 @@
       </div>
     </div>
     <div style="width:270px">
-    <form class="nav-item nav-link" style="width: 100%;" method="POST" action="/urls/login">
-      <input class="form-control" type="text" name="username" placeholder="username" style="width: 150px; float: left" >
-      <button class="btn btn-outline-primary" style=" float: right; color: white">  Login </button>
-    </div> 
-    </form>
+      <form class="nav-item nav-link" style="width: 100%;" method="POST" action="/urls/login">
+        
+        <%if(username) {%>
+          <div style= "width: 270px">
+          <p class ="navbar-brand" style="color: rgb(40, 40, 40);"  >Logged in As: <%-username%></p>
+          <button class="btn btn-success" style="color: rgb(255, 255, 255); border: 1px solid black;">  Logout </button>
+        </div>
+        <%} else {%>
+        <input class="form-control" type="text" name="username" placeholder="username" style="width: 150px; float: left" >
+        <button class="btn btn-outline-primary" style=" float: right; color: white">  Login </button>
+          <%}%>
+        </form>
+        </div> 
+   
   </nav>
+
 </header>
