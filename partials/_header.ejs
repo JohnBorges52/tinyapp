@@ -10,19 +10,27 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <div style="width:270px">
-      <form class="nav-item nav-link" style="width: 100%;" method="POST" action="/urls/login">
+    <div style="width:180px">
+      
         
-        <%if(username) {%>
-          <div style= "width: 270px">
-          <p class ="navbar-brand" style="color: rgb(40, 40, 40);"  >Logged in As: <%-username%></p>
+        <%if(userID) { %>
+          
+          <form class="nav-item nav-link" style="width: 100%;" method="POST" action="/logout">
+          <p class ="navbar-brand" style="color: rgb(40, 40, 40);"  >Logged in As: <%-userID.email%></p>
           <button class="btn btn-success" style="color: rgb(255, 255, 255); border: 1px solid black;">  Logout </button>
-        </div>
-        <%} else {%>
-        <input class="form-control" type="text" name="username" placeholder="username" style="width: 150px; float: left" >
-        <button class="btn btn-outline-primary" style=" float: right; color: white">  Login </button>
-          <%}%>
-        </form>
+          </form>
+       
+        <%} else { %>
+        <!-- <form class="nav-item nav-link" style="width: 100%;" method="GET" action="/login"> -->
+            <a href="/login" class="btn btn-outline-primary" style=" color: white">  Login </a>
+        <!-- </form>  -->
+
+        <!-- <form class="nav-item nav-link" style="width: 100%;" method="GET" action="/register"> -->
+            <a href="/register" class="btn btn-outline-primary" style="margin:0 3px; color: white">  Register </a>
+        <!-- </form> -->
+     
+        <%}%>
+        
         </div> 
    
   </nav>
