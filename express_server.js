@@ -24,10 +24,10 @@ const urlDatabase = {
 
 /////USERS DATABASE
 const users = { 
-  "userRandomID": {
-    id: "userRandomID", 
+  "aJ48lW": {
+    id: "aJ48lW", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: "123"
   },
   "user": {
     id: "user",
@@ -40,10 +40,6 @@ const users = {
     password: "dishwasher-funk"
   }
 }
-
-
-
-
 
 
 app.get("/", (req, res) => {
@@ -68,8 +64,7 @@ app.post("/urls", (req, res) => {
     urlDatabase[shortURL] = {
       longURL: longURL,
       userID: cookies.id};
-      
-    res.redirect("/urls/" + shortURL);
+      res.redirect("/urls/" + shortURL);
   } else {
     return res.status(401).send("ERROR, YOU MUST BE SIGNED INTO YOUR ACCOUNT")
   }    
@@ -78,17 +73,17 @@ app.post("/urls", (req, res) => {
 ///// GO TO THE PAGE WITH ALL OF THE URLS SAVED
 
 app.get("/urls", (req, res) => {
-  const cookiesID = req.cookies["user_id"]
-  const templateVars = { userID: users[req.cookies["user_id"]], urls: urlDatabase }
-  
-  if (cookiesID) {
-    
-    res.render("urls_index", templateVars)
-    }
-   else {
-    res.status(400).send("ERROR. YOU ARE NOT LOGGED IN")
+  const userID = req.cookies["user_id"]
+
+  if (!userID) {
+    return res.status(400).send("ERROR. YOU ARE NOT LOGGED IN");
   }
- 
+
+  const urls = urlsForUser(userID);
+
+
+  const templateVars = {userID, urls};
+  res.render("urls_index", templateVars);
 });
 
 
@@ -104,36 +99,65 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 
-app.get("/u/:shortURL", (req, res) => {
+ app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL 
+ 
   const array = Object.keys(urlDatabase)  
    
-  if (array.includes(shortURL)) {
-    const longURL = urlDatabase[shortURL].longURL
-    res.redirect(longURL);    
-  } else {
-      res.status(404).send("page does not exist")
-    } 
+  if (!array.includes(shortURL)) {
+    res.status(404).send("page does not exist")
+  }
+ 
+  const longURL = urlDatabase[shortURL].longURL
+ 
+
+  res.redirect(longURL)
+
   
-});
+ });
 
 //// CREATE A DELETE FUNCTION 
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
+  const userID = users[req.cookies["user_id"]];
+  
+  
+  if (!userID) {
+    return res.status(401).send("UNAUTHORIZED TO MAKE CHANGES")
+  }
+
   delete urlDatabase[shortURL]
+ 
   res.redirect("/urls")
 
-})
-//// ROUTE TO EDIT THE LONG_URL
-app.post("/urls/:shortURL/edit", (req,res) => {
-  const shortURL = req.params.shortURL;
-  urlDatabase[shortURL] = req.body.longURL
- 
-  res.redirect("/urls/");
 
 })
+
+
+//// ROUTE TO EDIT THE LONG_URL
+
+app.post("/urls/:shortURL/edit", (req,res) => {
+  
+  const shortURL = req.params.shortURL;
+  
+  const userID = users[req.cookies["user_id"]];
+
+  if (!userID) {
+    return res.status(401).send("UNAUTHORIZED TO MAKE CHANGES")
+  }
+  urlDatabase[shortURL].longURL = req.body.longURL;
+  
+  longURL = urlDatabase[shortURL].longURL
+ 
+  
+  
+  res.redirect("/urls/",shortURL);
+
+})
+
 //// ROUTE TO GO TO THE EDIT PAGE
+
 app.get("/urls/:shortURL/edit", (req,res) => {
  const templateVars = { userID: users[req.cookies["user_id"]],
  shortURL: req.params.shortURL,
@@ -161,6 +185,7 @@ app.post("/login", (req,res) => {
   if (!emailLookUp(email,users)) {
     return res.status(403).send("EMAIL NOT FOUND IN THE DATABASE")
   };
+
   if (emailLookUp(email,users) && !passwordLookUp(password,users)) {
     return res.status(403).send("WRONG PASSWORD")
 
@@ -212,7 +237,22 @@ app.post("/newUser" , (req, res) => {
   
 })
 
+const urlsForUser = function(id) {
+  const urls = {};
+  
+  for (let key in urlDatabase) {
+    const url = urlDatabase[key];
+  
+    if (url.userID === id) {
+      urls[key] = url;
+    }
+  
+  }
 
+  return urls;
+
+
+};
 
 
 
