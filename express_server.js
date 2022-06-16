@@ -11,8 +11,14 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2":{
+    longURL:"http://www.lighthouselabs.ca",
+    userID: "aJ48lW"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "aJ48lW"
+  }
 };
 
 
@@ -44,38 +50,71 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+
 app.get("/urls/new", (req, res) => {
   const templateVars = {  userID: users[req.cookies["user_id"]], urls: urlDatabase };
   res.render("urls_new", templateVars);
 });
 
+
+//// ADD A SHORT URL DO THE DATABASE //// 
+app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString();
+  const longURL = req.body.longURL
+
+  const cookies = users[req.cookies["user_id"]]
+
+  if (cookies) {  
+    urlDatabase[shortURL] = {
+      longURL: longURL,
+      userID: cookies.id};
+      
+    res.redirect("/urls/" + shortURL);
+  } else {
+    return res.status(401).send("ERROR, YOU MUST BE SIGNED INTO YOUR ACCOUNT")
+  }    
+});
+
 ///// GO TO THE PAGE WITH ALL OF THE URLS SAVED
 
 app.get("/urls", (req, res) => {
-  console.log(users[req.cookies["user_id"]]);
-  const templateVars = { userID: users[req.cookies["user_id"]], urls: urlDatabase };
-  res.render("urls_index", templateVars);
+  const cookiesID = req.cookies["user_id"]
+  const templateVars = { userID: users[req.cookies["user_id"]], urls: urlDatabase }
+  
+  if (cookiesID) {
+    
+    res.render("urls_index", templateVars)
+    }
+   else {
+    res.status(400).send("ERROR. YOU ARE NOT LOGGED IN")
+  }
+ 
 });
 
-//// CREATE A SHORT SPECIFIC SHORT URL 
+
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { userID: users[req.cookies["user_id"]], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
-  res.render("urls_show", templateVars);
-});
 
-app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
-  const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
-  res.redirect("/urls/" + shortURL);
-     
+  const templateVars = { 
+    userID: users[req.cookies["user_id"]],
+    shortURL: req.params.shortURL, 
+    longURL: urlDatabase[req.params.shortURL]};
+
+
+  res.render("urls_show", templateVars);
 });
 
 
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL
-  const longURL = urlDatabase[shortURL]
-  res.redirect(longURL);
+  const shortURL = req.params.shortURL 
+  const array = Object.keys(urlDatabase)  
+   
+  if (array.includes(shortURL)) {
+    const longURL = urlDatabase[shortURL].longURL
+    res.redirect(longURL);    
+  } else {
+      res.status(404).send("page does not exist")
+    } 
+  
 });
 
 //// CREATE A DELETE FUNCTION 
@@ -90,7 +129,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL/edit", (req,res) => {
   const shortURL = req.params.shortURL;
   urlDatabase[shortURL] = req.body.longURL
-  console.log(req.body)
+ 
   res.redirect("/urls/");
 
 })
@@ -154,7 +193,7 @@ app.post("/newUser" , (req, res) => {
   const randomID = generateRandomID();
   const email = req.body.email;
   const password = req.body.password;
-  console.log(req.body)
+  
   if (email.length === 0 || password.length ===  0) {
     return res.status(400).send("E-Mail or Password Invalid");
   }
@@ -168,10 +207,20 @@ app.post("/newUser" , (req, res) => {
     email,
     password
   }
-  res.cookie("user_id", randomID)
+  console.log(users)
   res.redirect("/urls")
   
 })
+
+////here
+const urlForUser = function(id,obj) {
+  for(let key in obj) {
+    if (obj[key].userID === id) {
+       return true
+    }
+  }
+  return false
+};
 
 
 
