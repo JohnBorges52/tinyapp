@@ -212,15 +212,7 @@ app.post("/newUser" , (req, res) => {
   
 })
 
-////here
-const urlForUser = function(id,obj) {
-  for(let key in obj) {
-    if (obj[key].userID === id) {
-       return true
-    }
-  }
-  return false
-};
+
 
 
 
