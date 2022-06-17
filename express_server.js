@@ -167,7 +167,7 @@ app.get("/urls/:shortURL/edit", (req,res) => {
   const templateVars = {
     userID: req.session.user_id,
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL
+    longURL: urlDatabase[req.params.shortURL]
   };
   
   res.render("urls_show", templateVars);
@@ -176,6 +176,7 @@ app.get("/urls/:shortURL/edit", (req,res) => {
 //// ROUTE TO THE LOGIN PAGE //////
 app.get("/login", (req,res) => {
   const templateVars = {userID: req.session.user_id};
+ 
   res.render("login", templateVars);
 
 });
@@ -185,8 +186,6 @@ app.post("/login", (req,res) => {
 
   const email = req.body.email;
   const password = req.body.password;
-  
- 
   const ID = getUserByEmail(email, users);
 
   if (!emailLookUp(email,users)) {
@@ -198,15 +197,14 @@ app.post("/login", (req,res) => {
   }
   
   req.session.user_id = users[ID].id;
-  
+
+
   res.redirect("/urls");
   
 });
 
 ////// ROUTE TO LOG OUT //////
 app.post("/logout", (req,res) => {
-  
-  let userID = req.session.user_id;
 
   req.session = null;
   res.redirect("/urls");
