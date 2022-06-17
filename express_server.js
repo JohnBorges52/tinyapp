@@ -1,5 +1,8 @@
 const express = require("express");
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
+const cookieSession = require('cookie-session');
+
 const router = express.Router();
 const app = express();
 const PORT = 8080; // default port 8080
@@ -9,6 +12,10 @@ const res = require("express/lib/response");
 app.set('view engine', 'ejs');
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieSession({
+  name: 'session',
+  keys: ["a","lot","of,","keys"],
+})
 
 const urlDatabase = {
   "b2xVn2":{
@@ -181,18 +188,19 @@ app.post("/login", (req,res) => {
   const email = req.body.email;
   const password = req.body.password;
   
+ 
+  const ID = retrieveID(email, users);
 
   if (!emailLookUp(email,users)) {
     return res.status(403).send("EMAIL NOT FOUND IN THE DATABASE")
   };
 
-  if (emailLookUp(email,users) && !passwordLookUp(password,users)) {
-    return res.status(403).send("WRONG PASSWORD")
-
+  if (bcrypt.compareSync(password,users[ID].password) === false) {
+    return res.send("WRONG PASSWORD!!")
   }
 
-  const id = retrieveID(email, users)
-  res.cookie("user_id", id)
+  
+  res.cookie("user_id", ID)
   res.redirect("/urls")
   
 })
@@ -201,7 +209,7 @@ app.post("/login", (req,res) => {
 app.post("/logout", (req,res) => {
 
   res.clearCookie("user_id")
-  res.redirect("/urls")
+  res.redirect("/login")   /////////////CHANGE HERE TO URLS BEFORE FINISHING
 })
 
 
@@ -218,6 +226,7 @@ app.post("/newUser" , (req, res) => {
   const randomID = generateRandomID();
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   
   if (email.length === 0 || password.length ===  0) {
     return res.status(400).send("E-Mail or Password Invalid");
@@ -230,11 +239,10 @@ app.post("/newUser" , (req, res) => {
   users[randomID] = {
     id: randomID,
     email,
-    password
+    password : hashedPassword,
   }
   console.log(users)
-  res.redirect("/urls")
-  
+  res.redirect("/login")    ///////CHANGE HERE BEFORE FINISHING TO URLS  
 })
 
 const urlsForUser = function(id) {
