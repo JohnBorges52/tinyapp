@@ -12,7 +12,6 @@ function generateRandomString() {
   return result
   
 }
-  
 function generateRandomID() {
     const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
     let result = '';

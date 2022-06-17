@@ -1,4 +1,10 @@
-const helpers = require("./helpers");
+const {
+  generateRandomID,
+  generateRandomString,
+  emailLookUp,
+  getUserByEmail,
+  urlsForUser
+} = require("./helpers");
 
 const express = require("express");
 const cookieParser = require('cookie-parser');
@@ -65,7 +71,7 @@ app.get("/urls/new", (req, res) => {
 
 //// ADD A SHORT URL DO THE DATABASE //// 
 app.post("/urls", (req, res) => {
-  const shortURL = helpers.generateRandomString();
+  const shortURL = generateRandomString();
   const longURL = req.body.longURL
 
   userID = req.session.user_id
@@ -92,7 +98,7 @@ app.get("/urls", (req, res) => {
     return res.status(400).send("ERROR. YOU ARE NOT LOGGED IN");
   }
 
-  const urls = helpers.urlsForUser(userID,urlDatabase);
+  const urls = urlsForUser(userID,urlDatabase);
 
 
   const templateVars = {userID, urls};
@@ -199,9 +205,9 @@ app.post("/login", (req,res) => {
   const password = req.body.password;
   
  
-  const ID = helpers.getUserByEmail(email, users);
+  const ID = getUserByEmail(email, users);
 
-  if (!helpers.emailLookUp(email,users)) {
+  if (!emailLookUp(email,users)) {
     return res.status(403).send("EMAIL NOT FOUND IN THE DATABASE")
   };
 
@@ -233,7 +239,7 @@ app.post("/logout", (req,res) => {
 ///// ROUTE TO ADD A NEW USER /////
 
 app.post("/newUser" , (req, res) => {
-  const randomID = helpers.generateRandomID();
+  const randomID = generateRandomID();
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
@@ -242,7 +248,7 @@ app.post("/newUser" , (req, res) => {
     return res.status(400).send("E-Mail or Password Invalid");
   }
 
-  if (helpers.emailLookUp(email, users) === true ) {
+  if (emailLookUp(email, users) === true ) {
     return res.status(400).send("ERROR 400 EMAIL ALREADY EXIST")
   };
   
