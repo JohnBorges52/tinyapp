@@ -15,7 +15,7 @@
       <div class="card-header"></div>
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL.longURL %></h5>
-        <p class="card-text">Short URL: <a href="/u/<%= shortURL%>"><%= shortURL %></a></p>
+        <p class="card-text">Short URL: <a href="/u/<%= shortURL%>" target="_blank"><%= shortURL %></a></p>
       </div>
       <h3 style="color: rgb(159, 159, 159);"> Edit </h3>
       <form class="form-inline" method="POST" action="/urls/<%= shortURL %>/edit" style="margin:auto;">

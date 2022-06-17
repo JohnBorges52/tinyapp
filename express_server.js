@@ -1,7 +1,10 @@
+const helpers = require("./helpers");
+
 const express = require("express");
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
+ 
 
 const router = express.Router();
 const app = express();
@@ -15,7 +18,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
   keys: ["a","lot","of,","keys"],
-})
+}));
 
 const urlDatabase = {
   "b2xVn2":{
@@ -55,38 +58,41 @@ app.get("/", (req, res) => {
 
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {  userID: users[req.cookies["user_id"]], urls: urlDatabase };
+  const templateVars = {  userID: req.session.user_id, urls: urlDatabase };
   res.render("urls_new", templateVars);
 });
 
 
 //// ADD A SHORT URL DO THE DATABASE //// 
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
+  const shortURL = helpers.generateRandomString();
   const longURL = req.body.longURL
 
-  const cookies = users[req.cookies["user_id"]]
+  userID = req.session.user_id
 
-  if (cookies) {  
-    urlDatabase[shortURL] = {
-      longURL: longURL,
-      userID: cookies.id};
-      res.redirect("/urls/" + shortURL);
-  } else {
-    return res.status(401).send("ERROR, YOU MUST BE SIGNED INTO YOUR ACCOUNT")
-  }    
+  if (!userID) { 
+    return res.status(401).send("ERROR, YOU MUST BE SIGNED INTO YOUR ACCOUNT") 
+  } 
+
+  urlDatabase[shortURL] = {
+    longURL: longURL,
+    userID: userID
+  };
+
+    res.redirect("/urls/" + shortURL); 
 });
 
 ///// GO TO THE PAGE WITH ALL OF THE URLS SAVED
 
 app.get("/urls", (req, res) => {
-  const userID = req.cookies["user_id"]
+  const userID = req.session.user_id
+
 
   if (!userID) {
     return res.status(400).send("ERROR. YOU ARE NOT LOGGED IN");
   }
 
-  const urls = urlsForUser(userID);
+  const urls = helpers.urlsForUser(userID,urlDatabase);
 
 
   const templateVars = {userID, urls};
@@ -97,7 +103,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
 
   const templateVars = { 
-    userID: users[req.cookies["user_id"]],
+    userID: req.session.user_id,
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL]};
 
@@ -127,7 +133,7 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
-  const userID = users[req.cookies["user_id"]];
+  const userID = req.session.user_id;
   
   
   if (!userID) {
@@ -148,7 +154,7 @@ app.post("/urls/:shortURL/edit", (req,res) => {
   
   const shortURL = req.params.shortURL;
   
-  const userID = users[req.cookies["user_id"]];
+  const userID = req.session.user_id;
 
   if (!userID) {
     return res.status(401).send("UNAUTHORIZED TO MAKE CHANGES")
@@ -156,19 +162,23 @@ app.post("/urls/:shortURL/edit", (req,res) => {
   urlDatabase[shortURL].longURL = req.body.longURL;
   
   longURL = urlDatabase[shortURL].longURL
- 
   
-  
-  res.redirect("/urls/",shortURL);
+  console.log(longURL)
+  console.log(shortURL)
+
+  res.redirect("/urls/");
 
 })
 
 //// ROUTE TO GO TO THE EDIT PAGE
 
 app.get("/urls/:shortURL/edit", (req,res) => {
- const templateVars = { userID: users[req.cookies["user_id"]],
- shortURL: req.params.shortURL,
- longURL: urlDatabase[req.params.shortURL]};
+  const templateVars = { 
+  userID: req.session.user_id,
+  shortURL: req.params.shortURL,
+  longURL: urlDatabase[req.params.shortURL].longURL
+  };
+  
   res.render("urls_show", templateVars)
 })
 
@@ -177,7 +187,7 @@ app.get("/urls/:shortURL/edit", (req,res) => {
 
 //// ROUTE TO THE LOGIN PAGE //////
 app.get("/login", (req,res) => {
-  const templateVars = {userID: users[req.cookies["user_id"]]};
+  const templateVars = {userID: req.session.user_id};
   res.render("login", templateVars);
 
 })
@@ -189,9 +199,9 @@ app.post("/login", (req,res) => {
   const password = req.body.password;
   
  
-  const ID = retrieveID(email, users);
+  const ID = helpers.getUserByEmail(email, users);
 
-  if (!emailLookUp(email,users)) {
+  if (!helpers.emailLookUp(email,users)) {
     return res.status(403).send("EMAIL NOT FOUND IN THE DATABASE")
   };
 
@@ -199,8 +209,8 @@ app.post("/login", (req,res) => {
     return res.send("WRONG PASSWORD!!")
   }
 
-  
-  res.cookie("user_id", ID)
+  req.session.user_id = users[ID].id
+ // res.cookie("user_id", ID)
   res.redirect("/urls")
   
 })
@@ -215,7 +225,7 @@ app.post("/logout", (req,res) => {
 
 ///// ROUTE TO GO TO REGISTRATION PAGE //////
   app.get("/register", (req,res) => {
-  const templateVars = {userID: users[req.cookies["user_id"]]}
+  const templateVars = {userID: req.session.user_id}
   res.render('register', templateVars)
   
 })
@@ -223,7 +233,7 @@ app.post("/logout", (req,res) => {
 ///// ROUTE TO ADD A NEW USER /////
 
 app.post("/newUser" , (req, res) => {
-  const randomID = generateRandomID();
+  const randomID = helpers.generateRandomID();
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
@@ -232,7 +242,7 @@ app.post("/newUser" , (req, res) => {
     return res.status(400).send("E-Mail or Password Invalid");
   }
 
-  if (emailLookUp(email, users) === true ) {
+  if (helpers.emailLookUp(email, users) === true ) {
     return res.status(400).send("ERROR 400 EMAIL ALREADY EXIST")
   };
   
@@ -245,22 +255,7 @@ app.post("/newUser" , (req, res) => {
   res.redirect("/login")    ///////CHANGE HERE BEFORE FINISHING TO URLS  
 })
 
-const urlsForUser = function(id) {
-  const urls = {};
-  
-  for (let key in urlDatabase) {
-    const url = urlDatabase[key];
-  
-    if (url.userID === id) {
-      urls[key] = url;
-    }
-  
-  }
 
-  return urls;
-
-
-};
 
 
 
@@ -281,57 +276,4 @@ app.listen(PORT, () => {
 });
 
 
-function generateRandomString() {
-  const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let result = '';
-  let joined = letters.split("")
-  for (let i = 0; i < 6; i++) {
-    
-  
-    result += joined[Math.floor(Math.random() * joined.length)];
-  
-  
-  }
-  return result
-  
-}
-  
-function generateRandomID() {
-    const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    let result = '';
-    let joined = letters.split("")
-    for (let i = 0; i < 3; i++) {
-      
-    
-      result += joined[Math.floor(Math.random() * joined.length)];
-    
-    
-    }
-    return result
-}
-function emailLookUp(value,obj) {
-    
-  for (let key in obj) {
-    if (obj[key].email === value) {
-      return true;
-    }
-  }
-  return false;
-}
-function passwordLookUp(value,obj) {
-    
-  for (let key in obj) {
-    if (obj[key].password === value) {
-      return true;
-    }
-  }
-  return false;
-}
-function retrieveID(value,obj) {
-  for (let key in obj) {
-    if (value === obj[key].email){
-      return obj[key].id
-    }
-  }
-}
 
