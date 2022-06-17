@@ -15,7 +15,7 @@ const cookieSession = require('cookie-session');
  
 //// IMPLEMENTATION OF MIDDLEWARES ////
 const app = express();
-const PORT = 8081;
+const PORT = 8080;
 const bodyParser = require("body-parser");
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
@@ -63,7 +63,7 @@ app.get("/", (req, res) => {
 
 //// ROUTER TO CREATE A NEW URL ////
 app.get("/urls/new", (req, res) => {
-  const templateVars = {  userID: req.session.user_id, urls: urlDatabase };
+  const templateVars = {  userID: req.session.user_id, urls: urlDatabase, username: users[req.session.user_id]};
   res.render("urls_new", templateVars);
 });
 
@@ -90,13 +90,15 @@ app.post("/urls", (req, res) => {
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
 
+
+
   if (!userID) {
     return res.status(400).send("ERROR. YOU ARE NOT LOGGED IN");
   }
 
   const urls = urlsForUser(userID,urlDatabase);
 
-  const templateVars = {userID, urls};
+  const templateVars = {userID, urls, username: users[req.session.user_id]};
   res.render("urls_index", templateVars);
 });
 
@@ -105,6 +107,7 @@ app.get("/urls/:shortURL", (req, res) => {
 
   const templateVars = {
     userID: req.session.user_id,
+    username: users[req.session.user_id],
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL]};
 
@@ -166,6 +169,7 @@ app.post("/urls/:shortURL/edit", (req,res) => {
 app.get("/urls/:shortURL/edit", (req,res) => {
   const templateVars = {
     userID: req.session.user_id,
+    username: users[req.session.user_id],
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL]
   };
@@ -176,18 +180,16 @@ app.get("/urls/:shortURL/edit", (req,res) => {
 //// ROUTE TO THE LOGIN PAGE //////
 app.get("/login", (req,res) => {
   const templateVars = {userID: req.session.user_id};
- 
+  
   res.render("login", templateVars);
 
 });
 
 //// ACCESS THE DATABASE IN ORDER TO LOGIN ////
 app.post("/login", (req,res) => {
-
   const email = req.body.email;
-  const password = req.body.password;
-  const ID = getUserByEmail(email, users);
-
+  const password = req.body.password
+  const ID = getUserByEmail(req.body.email, users)
   if (!emailLookUp(email,users)) {
     return res.status(403).send("EMAIL NOT FOUND IN THE DATABASE");
   }
@@ -197,7 +199,6 @@ app.post("/login", (req,res) => {
   }
   
   req.session.user_id = users[ID].id;
-
 
   res.redirect("/urls");
   
@@ -212,7 +213,7 @@ app.post("/logout", (req,res) => {
 
 ///// ROUTE TO GO TO REGISTRATION PAGE //////
 app.get("/register", (req,res) => {
-  const templateVars = {userID: req.session.user_id};
+  const templateVars = {userID: req.session.user_id, username: users[req.session.user_id]};
   res.render('register', templateVars);
   
 });
