@@ -188,8 +188,8 @@ app.get("/login", (req,res) => {
 //// ACCESS THE DATABASE IN ORDER TO LOGIN ////
 app.post("/login", (req,res) => {
   const email = req.body.email;
-  const password = req.body.password
-  const ID = getUserByEmail(req.body.email, users)
+  const password = req.body.password;
+  const ID = getUserByEmail(req.body.email, users);
   if (!emailLookUp(email,users)) {
     return res.status(403).send("EMAIL NOT FOUND IN THE DATABASE");
   }
