@@ -34,15 +34,6 @@ function emailLookUp(value,obj) {
   }
   return false;
 }
-function passwordLookUp(value,obj) {
-    
-  for (let key in obj) {
-    if (obj[key].password === value) {
-      return true;
-    }
-  }
-  return false;
-}
 function getUserByEmail(value,obj) {
   for (let key in obj) {
     if (value === obj[key].email){
@@ -71,7 +62,6 @@ module.exports = {
 generateRandomID,
 generateRandomString,
 emailLookUp,
-passwordLookUp,
 getUserByEmail,
 urlsForUser,
 }
