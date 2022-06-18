@@ -16,7 +16,7 @@
         <%if(userID) { %>
           
           <form class="nav-item nav-link" style="width: 100%;" method="POST" action="/logout">
-          <p class ="navbar-brand" style="color: rgb(40, 40, 40); margin-right: 200px; float: left;"  >Logged in As: <%= username.email %></p>
+          <label style="color: rgb(40, 40, 40);"  >Logged in As: <%= username.email %></label>
           <button class="btn btn-success" style="color: rgb(255, 255, 255); border: 1px solid black;">  Logout </button>
           </form>
        
