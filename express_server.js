@@ -64,6 +64,11 @@ app.get("/", (req, res) => {
 //// ROUTER TO CREATE A NEW URL ////
 app.get("/urls/new", (req, res) => {
   const templateVars = {  userID: req.session.user_id, urls: urlDatabase, username: users[req.session.user_id]};
+  
+  if (!templateVars.userID) {
+    res.redirect("/login");
+  }
+
   res.render("urls_new", templateVars);
 });
 
@@ -71,7 +76,6 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
-
   const userID = req.session.user_id;
 
   if (!userID) {
@@ -90,14 +94,11 @@ app.post("/urls", (req, res) => {
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
 
-
-
   if (!userID) {
     return res.status(400).send("ERROR. YOU ARE NOT LOGGED IN");
   }
 
   const urls = urlsForUser(userID,urlDatabase);
-
   const templateVars = {userID, urls, username: users[req.session.user_id]};
   res.render("urls_index", templateVars);
 });
@@ -109,8 +110,12 @@ app.get("/urls/:shortURL", (req, res) => {
     userID: req.session.user_id,
     username: users[req.session.user_id],
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]};
-
+    longURL: urlDatabase[req.params.shortURL]
+  };
+  
+  if (templateVars.userID !== urlDatabase[templateVars.shortURL].userID) {
+    res.status(401).send("ERROR. User no authorized to access url.");
+  }
 
   res.render("urls_show", templateVars);
 });
@@ -118,35 +123,27 @@ app.get("/urls/:shortURL", (req, res) => {
 ///// LINK THAT GOES TO THE LONG URL /////
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
- 
   const array = Object.keys(urlDatabase);
-   
+
   if (!array.includes(shortURL)) {
     res.status(404).send("page does not exist");
   }
  
   const longURL = urlDatabase[shortURL].longURL;
- 
-
   res.redirect(longURL);
-
 });
 
-//// DELETE A URL ////
+//// DELETE A URL ///
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   const userID = req.session.user_id;
-  
   
   if (!userID) {
     return res.status(401).send("UNAUTHORIZED TO MAKE CHANGES");
   }
 
   delete urlDatabase[shortURL];
- 
   res.redirect("/urls");
-
-
 });
 
 //// EDIT THE LONG URL IN THE DATABASE ////
@@ -180,9 +177,7 @@ app.get("/urls/:shortURL/edit", (req,res) => {
 //// ROUTE TO THE LOGIN PAGE //////
 app.get("/login", (req,res) => {
   const templateVars = {userID: req.session.user_id};
-  
   res.render("login", templateVars);
-
 });
 
 //// ACCESS THE DATABASE IN ORDER TO LOGIN ////
@@ -199,9 +194,7 @@ app.post("/login", (req,res) => {
   }
   
   req.session.user_id = users[ID].id;
-
   res.redirect("/urls");
-  
 });
 
 ////// ROUTE TO LOG OUT //////
