@@ -1,38 +1,69 @@
 <header>
   <nav class="navbar navbar-expand-md navbar-dark bg-success">
-    <a class="navbar-brand" href="/urls">TinyApp</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <%if(userID) { %> <a class="navbar-brand" href="/urls">TinyApp</a> <%}%>
+    <%if(!userID) { %> <a class="navbar-brand" href="/login">TinyApp</a> <%}%>
+    <!-- <button
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarNavAltMarkup"
+      aria-controls="navbarNavAltMarkup"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
       <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    </button> -->
+    <div
+      class="collapse navbar-collapse"
+      style="display: flex; flex-direction: row; justify-content: space-between"
+      id="navbarNavAltMarkup"
+    >
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-    </div>
-    <div style="width:280px">
-      
-        
-        <%if(userID) { %>
-          
-          <form class="nav-item nav-link" style="width: 100%;" method="POST" action="/logout">
-          <label style="color: rgb(40, 40, 40);"  >Logged in As: <%= username.email %></label>
-          <button class="btn btn-success" style="color: rgb(255, 255, 255); border: 1px solid black;">  Logout </button>
-          </form>
-       
-        <%} else { %>
-        <!-- <form class="nav-item nav-link" style="width: 100%;" method="GET" action="/login"> -->
-            <a href="/login" class="btn btn-outline-primary" style=" color: white">  Login </a>
-        <!-- </form>  -->
 
-        <!-- <form class="nav-item nav-link" style="width: 100%;" method="GET" action="/register"> -->
-            <a href="/register" class="btn btn-outline-primary" style="margin:0 3px; color: white">  Register </a>
-        <!-- </form> -->
-     
+      <%if(userID) { %>
+      <div
+        style="
+          width: 470px;
+          display: flex;
+          flex-direction: row;
+          justify-content: flex-end;
+          align-items: center;
+        "
+      >
+        <span
+          style="
+            color: rgb(255, 255, 255);
+            align-items: center;
+            margin-right: 10px;
+          "
+          >Logged in as: <%= username.email %></span
+        >
+        <form action="/logout" method="POST">
+          <button
+            class="btn btn-outline-success"
+            style="color: white; border-color: white"
+          >
+            Logout
+          </button>
+        </form>
+      </div>
+      <%} else { %>
+      <div style="width: 160px">
+        <a href="/login" class="btn btn-outline-primary" style="color: white">
+          Login
+        </a>
+        <a
+          href="/register"
+          class="btn btn-outline-primary"
+          style="margin: 0 3px; color: white"
+        >
+          Register
+        </a>
         <%}%>
-        
-        </div> 
-   
+      </div>
+    </div>
   </nav>
-
 </header>
